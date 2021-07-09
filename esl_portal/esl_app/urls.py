@@ -12,5 +12,6 @@ urlpatterns = [
     path('tests/', views.test_list, name='test_list'),
     path('test/<int:test_id>/', views.test, name='test'),
     path('test/<int:test_id>/result/', views.test_result, name='test_result'),
-    path('logout/', views.log_out, name='logout')
+    path('logout/', views.log_out, name='logout'),
+    path('register/ajax/', views.validate_username, name='validate_username'),
 ]

@@ -4,6 +4,7 @@ from .forms import *
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from django.contrib.auth import authenticate, login, logout
+from django.http import JsonResponse
 # Create your views here.
 
 def main(request):
@@ -132,3 +133,10 @@ def test(request, test_id):
 def test_result(request, test_id):
     completion = Completion.objects.filter(user=request.user, test_id=test_id)
     return render(request, 'esl_app/completed.html', {'completion': completion})
+
+def validate_username(request):
+    username = request.GET.get('username', None)
+    response = {
+        'is_taken': User.objects.filter(username__iexact=username).exists()
+    }
+    return JsonResponse(response)
