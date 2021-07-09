@@ -79,7 +79,9 @@
   <form method="post" action="{% url 'login' %}">
     {% csrf_token %}
     <h1 class="h3 mb-3 fw-normal">Авторизация</h1>
-
+    {% if wrong_credentials %}
+        <p style="color: red">Неправильное имя пользователя или пароль</p>
+    {% endif %}
     <div class="form-floating">
       <input type="text" class="form-control" id="floatingInput {{ form.username.id_for_label }}" placeholder="Username" name="{{ form.username.html_name }}">
       <label for="floatingInput">{{ form.username.label }}</label>
@@ -92,9 +94,9 @@
     <div class="checkbox mb-3">
 
     </div>
-    <button class="w-100 btn btn-lg btn-primary" type="submit" value="Submit">Войти</button>
-
+    <button class="w-100 btn btn-lg btn-primary" type="submit" value="Submit" style="margin-bottom: 5px">Войти</button>
   </form>
+    <a href="{% url 'forgot' %}"><button class="w-100 btn btn-lg btn-primary" type="submit" value="Submit">Забыл пароль</button></a>
 </main>
 
 
