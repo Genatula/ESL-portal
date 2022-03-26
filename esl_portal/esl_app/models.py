@@ -44,7 +44,6 @@ class Test(models.Model):
     test_short_description = models.CharField(max_length=200)
     level = models.CharField(max_length=2, choices=LEVELS)
     aspect = models.CharField(max_length=2, choices=ASPECTS)
-    time_limit = models.PositiveSmallIntegerField()
     questions = models.ManyToManyField(Question)
 
     def __str__(self):
@@ -62,11 +61,9 @@ class Completion(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     test = models.ForeignKey(Test, on_delete=models.CASCADE)
     is_completed = models.BooleanField()
-    taken_time = models.PositiveIntegerField()
+    number_of_last_answered_question = models.PositiveSmallIntegerField()
     num_of_correct = models.PositiveSmallIntegerField()
     is_started = models.BooleanField()
 
     def __str__(self):
         return self.user.username.__str__() + "'s completion of " + self.test.__str__()
-
-
