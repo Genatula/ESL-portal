@@ -42,17 +42,15 @@ def login_forgot(request):
     if request.method == 'POST':
         username = request.POST['username']
         password = request.POST['password']
-        password_confirmation = request.POST['password_confirmation']
+        form = UserForgotForm(request.POST)
         if User.objects.filter(username=username).count() != 0:
             user = User.objects.get(username=username)
-            if password == password_confirmation:
+            if form.is_valid():
                 user.set_password(password)
                 user.save()
                 return redirect(to='/login/')
             else:
-                form = UserForgotForm(request.POST)
-                return render(request, 'esl_app/forgot.html', {'wrong_credentials': True,
-                                                               'form': form})
+                return render(request, 'esl_app/forgot.html', {'form': form})
         else:
             form = UserForgotForm(request.POST)
             return render(request, 'esl_app/forgot.html', {'wrong_credentials': True,
@@ -76,7 +74,7 @@ def register(request):
         return redirect('/main/')
     if request.method == 'POST':
         user_form = UserRegistrationForm(request.POST)
-        if user_form.is_valid() and (request.POST['password'] == request.POST['password2']) and user_form.unique():
+        if user_form.is_valid() and user_form.unique():
             new_user = User.objects.create_user(username=request.POST['username'],
                             first_name=request.POST['first_name'],
                             email=request.POST['email'],
@@ -92,8 +90,10 @@ def profile_completed(request):
     user = request.user
     completions = Completion.objects.filter(user=user, is_completed=True)
     is_empty = len(completions) == 0
+    is_authenticated = request.user.is_authenticated
     return render(request, 'esl_app/completed.html', {'completions': completions,
-                                                      'is_empty': is_empty})
+                                                      'is_empty': is_empty,
+                                                      'is_authenticated': is_authenticated})
 
 
 @login_required(login_url='/login/')
@@ -105,16 +105,17 @@ def profile_options(request):
             new_username = request.POST['new_username']
             new_email = request.POST['new_email']
             new_first_name = request.POST['new_first_name']
-            if user.username != new_username:
+            if user.username != new_username and new_username != '' and new_username is not None:
                 user.username = new_username
-            if user.email != new_email:
+            if user.email != new_email and new_email != '' and new_email is not None:
                 user.email = new_email
-            if user.first_name != new_first_name:
+            if user.first_name != new_first_name and new_first_name != '' and new_first_name is not None:
                 user.first_name = new_first_name
             if request.POST['new_password'] != '':
                 user.set_password(request.POST['new_password'])
             user.save()
-            return redirect('/profile/')
+            everything_empty = new_username == '' and new_email == '' and new_first_name == '' and request.POST['new_password'] == ''
+            return render(request, 'esl_app/options.html', {'user': request.user, 'form': form, 'everything_empty': everything_empty})
     else:
         data = {'new_username': user.username,
                 'new_first_name': user.first_name,
@@ -232,6 +233,11 @@ def previous_question(request, test_id):
 def respond(request, test_id):
     if is_ajax(request):
         count = int(request.POST['count'])
+        is_last = request.POST['is_last']
+        if is_last == 'false':
+            is_last = False
+        else:
+            is_last = True
         completion = Completion.objects.get(user__username=request.user.username, test=Test.objects.get(pk=test_id))
         test_question_answer = list(
             Answer.objects.filter(related_question=Question.objects.get(question_text=request.POST['question_text']),
@@ -299,7 +305,8 @@ def respond(request, test_id):
                 completion.num_of_correct += 1
             completion.number_of_last_answered_question = count
             completion.save()
-        return JsonResponse({'is_correct': is_correct})
+        print(is_last)
+        return JsonResponse({'is_correct': is_correct, 'is_last': is_last})
 
 
 def finish_test(request, test_id):
